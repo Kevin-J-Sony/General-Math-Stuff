@@ -15,6 +15,16 @@ def create_grid(map, width, height, coord):
     # The unit length is 20 pixels
     UNIT = 20
 
+    # multiply linear map by another linear map that reflects it across the x-axis.
+    # however, since im dealing with basis vectors as rows instead of columns
+    # this means i have to adjust my calculations likewise
+    # the transpose of the reflection matrix is the reflection matrix
+    norm_map = np.array([[1,0],[0,-1]])
+
+    # however, the order in which the map is multiplied must reversed
+    # map = np.matmul(norm_map,map)
+    map = np.matmul(map,norm_map)
+
     # wrap the origin into a numpy array and get the unit vectors
     origin = np.array([coord[0], coord[1]])
     unit_xaxis = np.array(map[0]) # unit_xaxis = np.array([1,0])
