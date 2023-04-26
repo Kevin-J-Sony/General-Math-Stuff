@@ -1,14 +1,18 @@
 import numpy as np
 import pygame
 from jacobian import jacobian
-from grid import create_grid
-from math import sin, cos
+from grid import create_grid, UNIT, PI
+from math import sin, cos, sqrt, atan
 
 def pol_to_rect(radius, theta):
     return np.array([radius * cos(theta), radius * sin(theta)])
 
-
-# for the path traversed, go along a straight ray from the origin until a certain radius is reached
+def rect_to_pol(x,y):
+    r = sqrt(x*x + y*y)
+    theta = atan(y/x)
+    if x < 0:
+        theta = theta + PI
+    return np.array([r, theta])
 
 def main():
     pygame.init()
@@ -20,34 +24,43 @@ def main():
     WHITE = (255,255,255)
     BLACK = (0,0,0)
     MAGENTA = (255,0,255)
-    LINE_WIDTH = 2
 
-    pi = 3.14159265359
+    LINE_WIDTH = 2
 
     grid_width = SCREEN_WIDTH
     grid_height = SCREEN_HEIGHT/2
 
+    # Create the top (input) grid that will serve as the visualization of the domain
     id = np.array([[1,0],[0,1]])
     grid1 = create_grid(id,grid_width,grid_height,(0,0))
     angle = 0
-    radius = 1/1000000    
-    start = np.array([radius, angle])
-    end = np.array([radius, angle])
+    start = np.array([0, 0])
     origin = np.array([grid_width/2 + 0, grid_height/2 + 0])
 
-    jac = jacobian(pol_to_rect,end)
-    grid2 = create_grid(jac,grid_width,grid_height,(0, SCREEN_HEIGHT/2))
+    # The points (relative to top grid) which compose the path of the domain
+    points = []
+    angle = 0.01
+    while angle < 4*PI:
+        point = np.array([angle*cos(angle)/5,angle*sin(angle)/5])
+        points.append(point)
+        angle = angle + 0.01
+
+    # The bottom (output) grid that shows the local coordinate change
+    jac = 0
+    grid2 = 0
 
     t = 0
     running = True
+    flag = False
     while running:
-        clock.tick(30)
+        clock.tick(60)
         screen.fill(BLACK)
 
-        if t < 500:
-            end += np.array([1/100,pi/100])
-            jac = jacobian(pol_to_rect,end)
+        if not flag:
+            end = points[t%len(points)]
+            jac = jacobian(rect_to_pol,end)
             grid2 = create_grid(jac,grid_width,grid_height,(0, SCREEN_HEIGHT/2)) 
+            t += 1
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -56,10 +69,24 @@ def main():
             pygame.draw.line(screen,WHITE,line[0],line[1],LINE_WIDTH)
         for line in grid2:
             pygame.draw.line(screen,WHITE,line[0],line[1],LINE_WIDTH)
+
+        flip = np.array([1,-1])
+        for i in range(len(points)):
+            p1 = points[i%len(points)] * flip
+            p2 = points[(i+1)%len(points)] * flip
+            pygame.draw.line(screen,MAGENTA,origin + (UNIT * p1),origin + (UNIT * p2),LINE_WIDTH)
         
-        pygame.draw.line(screen,MAGENTA,start+origin,end+origin,LINE_WIDTH)
+        s = UNIT * start * flip
+        e = UNIT * end * flip
+
+        pygame.draw.line(screen,MAGENTA,s+origin,e+origin,LINE_WIDTH)
         pygame.display.flip()
-        t += 1
+
+        # when space is pressed, flip the flag
+        # when i is pressed, get information about current
+        keys_pressed = pygame.key.get_pressed()
+        if keys_pressed[pygame.K_SPACE]:
+            flag = not flag
 
     pygame.quit()
     

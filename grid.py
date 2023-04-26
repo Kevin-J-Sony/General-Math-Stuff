@@ -1,5 +1,10 @@
 import numpy as np
 
+### RELEVANT CONSTANTS
+UNIT = 20
+PI = 3.14159265359
+
+
 # Given a linear map, create a list of pairs of endpoints that represent a line.
 # The pair of endpoints will come in the following form: ((start_x, start_y), (end_x, end_y))
 # It will NOT be adjusted for the coordinates; however, the grid will be truncated so that
@@ -8,10 +13,8 @@ import numpy as np
 # width: the width of the grid
 # height: the height of the grid
 # coord: coordinate of upper left corner of box
-# 
 def create_grid(map, width, height, coord):
     # The unit length is 20 pixels
-    UNIT = 20
 
     # multiply linear map by another linear map that reflects it across the x-axis.
     # however, since im dealing with basis vectors as rows instead of columns
@@ -185,7 +188,10 @@ def create_grid(map, width, height, coord):
     # return [(neg_xaxis,pos_xaxis),(neg_yaxis,pos_yaxis)]
     return lines
 
-
+#
+def create_line():
+    ...
+    
 def main():
     pygame.init()
     SCREEN_WIDTH = SCREEN_HEIGHT = 800
@@ -198,7 +204,6 @@ def main():
 
     # line width 2
     LINE_WIDTH = 2
-    pi = 3.14159265359
     m = 0
     grid_width = grid_height = SCREEN_WIDTH/2
 
@@ -207,7 +212,7 @@ def main():
         clock.tick(30)
         screen.fill(BLACK)
 
-        angle = m * pi/60  
+        angle = m * PI/60  
         cc_rotation = np.array([[cos(angle),sin(angle)],[-sin(angle),cos(angle)]])
         c_rotation = np.array([[cos(-angle),sin(-angle)],[-sin(-angle),cos(-angle)]])
         grid1 = create_grid(cc_rotation,grid_width,grid_height,(0, 0))
