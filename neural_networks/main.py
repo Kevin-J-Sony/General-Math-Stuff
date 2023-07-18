@@ -1,48 +1,29 @@
-import matplotlib.pyplot as plt
-import matplotlib as mpl
-import pygame
 from read_numbers import *
+from fnn import FeedForwardNN
 
-# the pixels values contains the pixel value for the images in a 28*28=784 element array
-# the values of the pixel range from 0 to 255
-# we need to first reverse the order of the array given to properly plot it
-# we want to allocate 20 pixels at the very least to each 
+
 def main():
-    train_pdata, train_label = read_train_data(5)
+    train_data_input, train_data_label = read_train_data(20)
+    # we can't quite use the label as an output as the particular form of this model
+    # makes it much difficult to output a label as an answer. Instead, format the data
+    # as an array which is turned on at certain indices
+    train_data_output = []
+    for label in train_data_label:
+        t = np.zeros(10)
+        t[label] = 1
+        train_data_output.append(t)
+    mnist_fnn_model = FeedForwardNN(784, 100, 10)
 
-    pygame.init()
-    SCREEN_WIDTH = 1400
-    SCREEN_HEIGHT = 800
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-    pygame.display.set_caption("Visualizing MNIST dataset")
-    clock = pygame.time.Clock()
-    UNIT = 20
-
-    running = True
-    idx = 0
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-
-        current_train_data = train_pdata[idx]
-
-        for row in range(28):
-            for col in range(28):
-                rect = pygame.Rect(col*UNIT+40,row*UNIT+40,UNIT,UNIT)
-                shade = current_train_data[row * 28 + col]
-                pygame.draw.rect(screen, (shade,shade,shade),rect)
-
-
-        pygame.display.flip()
-
-        clock.tick(30)
-        keys_pressed = pygame.key.get_pressed()
-        if keys_pressed[pygame.K_SPACE]:
-            idx += 1
-            idx = idx % 5
-            print(train_label[idx])
-    pygame.quit()
+    # store the initial model
+    mnist_fnn_model.save("before_training.fnn")
+    
+    # train the model
+    model_output = mnist_fnn_model.compute(train_data_input[0])
+    for output in model_output:
+        print(output, '\n\n')
+    # print(model_output[len(model_output) - 1])
+    
 
 if __name__ == '__main__':
     main()
+    
