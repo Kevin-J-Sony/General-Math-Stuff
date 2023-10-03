@@ -19,8 +19,11 @@ def main():
     
     # train the model
     model_output = mnist_fnn_model.compute(train_data_input[0])
+    '''
     for output in model_output:
         print(output, '\n\n')
+    '''
+    mnist_fnn_model.train(train_data_input, train_data_output)
     # print(model_output[len(model_output) - 1])
     
 

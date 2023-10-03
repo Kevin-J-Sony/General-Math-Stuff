@@ -99,6 +99,11 @@ class FeedForwardNN:
     # to each element in this matrix
     def transform(matrix):
         return 1/(1+np.exp(-matrix))
+        # return matrix * (matrix > 0)
+
+    def dtransform(matrix):
+        temp = FeedForwardNN.transform(matrix)
+        return temp * (1 - temp)
 
     def compute(self, input):
         if len(input) != len(self.weight_layers[0]):
@@ -112,7 +117,26 @@ class FeedForwardNN:
         return Z
 
     def train(self, train_data_inputs, train_data_outputs):
-        ...
+        if len(train_data_inputs) != len(train_data_outputs):
+            print('# of train inputs: ', len(train_data_inputs))
+            print('# of train outputs: ', len(train_data_outputs))
+            raise Exception("The number of inputs does not match the number of outputs")
+
+        n_loops = 100
+        for loop in range(n_loops):
+            for idx in range(len(train_data_inputs)):
+                current_input = train_data_inputs[idx]
+                current_correct_output = train_data_outputs[idx]
+                intermediate_outputs = [current_input]
+                for j in range(len(self.weight_layers)):
+                    A = np.matmul(intermediate_outputs[j], self.weight_layers[j]) + self.bias_layers[j]
+                    intermediate_outputs.append(FeedForwardNN.transform(A))
+                # Now this is the time to back propagate
+                ideal_output = current_correct_output
+                for j in range(len(self.weight_layers) - 1 - 1, 1 - 1, -1):
+                    # dz = 1 if 
+                    ...
+            
 
     def test(self, test_data_inputs, test_data_outputs):
         if len(test_data_inputs) != len(test_data_outputs):
