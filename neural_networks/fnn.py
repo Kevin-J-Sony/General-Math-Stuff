@@ -98,12 +98,13 @@ class FeedForwardNN:
 
     # to each element in this matrix
     def transform(matrix):
-        return 1/(1+np.exp(-matrix))
-        # return matrix * (matrix > 0)
+        # return 1/(1+np.exp(-matrix))
+        return matrix * (matrix > 0)
 
     def dtransform(matrix):
-        temp = FeedForwardNN.transform(matrix)
-        return temp * (1 - temp)
+        # temp = FeedForwardNN.transform(matrix)
+        # return np.exp(-matrix) * (temp*temp)
+        return 1 * (matrix > 0)
 
     def compute(self, input):
         if len(input) != len(self.weight_layers[0]):
@@ -122,8 +123,10 @@ class FeedForwardNN:
             print('# of train outputs: ', len(train_data_outputs))
             raise Exception("The number of inputs does not match the number of outputs")
 
-        n_loops = 100
+        n_loops = 20
+
         for loop in range(n_loops):
+            '''
             for idx in range(len(train_data_inputs)):
                 current_input = train_data_inputs[idx]
                 current_correct_output = train_data_outputs[idx]
@@ -136,18 +139,81 @@ class FeedForwardNN:
                 for j in range(len(self.weight_layers) - 1 - 1, 1 - 1, -1):
                     # dz = 1 if 
                     ...
+            '''
+            n_of_layers = len(self.n_layers)
+
+            input = train_data_inputs
+            correct_output = train_data_outputs
+            intermediate_outputs = [input]
+            for j in range(n_of_layers - 1):
+                A = np.matmul(intermediate_outputs[j], self.weight_layers[j]) + self.bias_layers[j]
+                intermediate_outputs.append(FeedForwardNN.transform(A))
+            # backpropagate with intermediate outputs
+            ideal_output = [0 for i in range(n_of_layers)]
+            ideal_output[-1] = correct_output
+
+            momentum_w = 0
+            momentum_b = 0
+            gamma = 0.01
+
+            # print(len(intermediate_outputs))
+            for j in range(-1, -n_of_layers, -1):
+                #print(ideal_output[j])
+                dE = intermediate_outputs[j] - ideal_output[j]
+                if type(intermediate_outputs[j]) == type([1, 2]):
+                    #print(intermediate_outputs[j])
+                    print(type(input))
+                dy = FeedForwardNN.dtransform(intermediate_outputs[j])
+
+                grad_w = np.matmul(np.transpose(dE * dy), intermediate_outputs[j - 1]).T
+                #print(np.shape(dE))
+                #print(np.shape(dy))
+                #print(np.shape(intermediate_outputs[j - 1]))
+                    
+                #print(np.shape(grad_w))
+                #print(np.shape(sum(grad_w)))
+
+                grad_b = dE * dy * 1
+                #print(np.shape(grad_b))
+                #print(np.shape(sum(grad_b)))
+                
+
+                #momentum_w = 0.08*momentum_w + grad_w
+                #momentum_b = 0.08*momentum_b + sum(grad_b)
+                momentum_w = grad_w
+                momentum_b = sum(grad_b)
+                
+                self.weight_layers[j] = self.weight_layers[j] - gamma * (momentum_w)
+                self.bias_layers[j] = self.bias_layers[j] - gamma * (momentum_b)
+
+                if j != -n_of_layers:
+                    print(np.shape(dE * dy))
+                    print(np.shape(intermediate_outputs[j - 1]))
+                    print(np.shape(self.weight_layers[j]))
+                    grad_x = np.matmul(dE * dy, np.transpose(self.weight_layers[j])) # intermediate_outputs[j - 1]
+                    print(np.shape(grad_x))
+                    ideal_output[j - 1] = intermediate_outputs[j - 1] - gamma * (grad_x)
+
+                print(sum(dE))
+                print('----------------------------------------')
+
             
 
     def test(self, test_data_inputs, test_data_outputs):
+        
         if len(test_data_inputs) != len(test_data_outputs):
             raise Exception("The number of inputs does not match the number of outputs")
-        for idx in len(test_data_inputs):
+        for idx in range(len(test_data_inputs)):
             ti = test_data_inputs[idx]
             to = test_data_outputs[idx]
 
             H = self.compute(ti)
             
-            H[len(H) - 1]
+            me = np.max(H[-1])
+            co = np.zeros(len(H[-1]))
+            for i in range(len(H[-1])):
+                print(H[-1][i])
+            ##print(co)
             
 
 

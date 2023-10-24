@@ -24,7 +24,7 @@ for j in range(100):
     dS = np.sum(np.array([2*((X(k, tT[i]) - tX[i])) * dX(k, tT[i]) for i in range(len(tT))]))
     d2S = np.array([2*dX(k, tT[i])**2 + 2*(X(k,tT[i]) - tX[i]) * d2X(k, tT[i]) for i in range(len(tT))])
     d2S = np.sum(d2S)
-    k = k - dS/d2S
+    k = k - 0.0001 * dS #/d2S
     print(k, '\t', dS)
 
 k = np.array([0.1*i for i in range(-10,10)])

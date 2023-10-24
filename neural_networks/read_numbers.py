@@ -23,7 +23,7 @@ def read_train_data(number_of_data):
         for i in range(784):
             a = int.from_bytes(file.read(1), "big")
             raw_number[i] = a
-        raw_numbers.append(raw_number)
+        raw_numbers.append(raw_number / 256)
 
     file.close()
 
@@ -37,13 +37,13 @@ def read_train_data(number_of_data):
 
     file.close()
 
-    return raw_numbers, labels
+    return np.array(raw_numbers), labels
 
 
 # read test data
 # returns two outputs, a list of the testing data as well as the label of each testing data
 def read_test_data(number_of_data):
-    file = open("data\\t10k-images.idx3-ubyte",'rb')
+    file = open("data/t10k-images.idx3-ubyte",'rb')
     a = file.read(4)
     b = file.read(4)
 
@@ -62,11 +62,11 @@ def read_test_data(number_of_data):
         for i in range(784):
             a = int.from_bytes(file.read(1))
             raw_number[i] = a
-        raw_numbers.append(raw_number)
+        raw_numbers.append(raw_number / 255)
 
     file.close()
 
-    file = open("data\\t10k-labels.idx1-ubyte",'rb')
+    file = open("data/t10k-labels.idx1-ubyte",'rb')
     a = file.read(4)
     b = file.read(4)
 
@@ -76,7 +76,7 @@ def read_test_data(number_of_data):
 
     file.close()
 
-    return raw_numbers, labels
+    return np.array(raw_numbers), labels
 
 if __name__ == '__main__':
     raw_numbers, labels = read_train_data(10)
