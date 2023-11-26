@@ -32,14 +32,23 @@ def main():
     mnist_fnn_model.save("before_training.fnn")
     
     # train the model
-    model_output = mnist_fnn_model.compute(train_data_inputs[0])
+    idx = 17
+    model_output = mnist_fnn_model.compute(train_data_inputs[idx])
+    prev_output = model_output[-1]
     '''
     for output in model_output:
         print(output, '\n\n')
     '''
     print(type(train_data_inputs))
     mnist_fnn_model.train(train_data_inputs, train_data_outputs)
-    print(model_output[len(model_output) - 1])
+
+    # test the model
+    model_output = mnist_fnn_model.compute(train_data_inputs[idx])
+    curr_output = model_output[-1]
+    print(prev_output)
+    print(curr_output)
+    print(train_data_labels[idx])
+    print(train_data_outputs[idx])
 
     test_data_inputs, test_data_labels = read_test_data(10)
     test_data_outputs = []

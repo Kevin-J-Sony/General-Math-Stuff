@@ -123,7 +123,7 @@ class FeedForwardNN:
             print('# of train outputs: ', len(train_data_outputs))
             raise Exception("The number of inputs does not match the number of outputs")
 
-        n_loops = 20
+        n_loops = 1
 
         for loop in range(n_loops):
             '''
@@ -159,7 +159,7 @@ class FeedForwardNN:
             # print(len(intermediate_outputs))
             for j in range(-1, -n_of_layers, -1):
                 #print(ideal_output[j])
-                dE = intermediate_outputs[j] - ideal_output[j]
+                dE = (intermediate_outputs[j] - ideal_output[j]) / len(train_data_inputs)
                 if type(intermediate_outputs[j]) == type([1, 2]):
                     #print(intermediate_outputs[j])
                     print(type(input))
@@ -187,14 +187,17 @@ class FeedForwardNN:
                 self.bias_layers[j] = self.bias_layers[j] - gamma * (momentum_b)
 
                 if j != -n_of_layers:
-                    print(np.shape(dE * dy))
-                    print(np.shape(intermediate_outputs[j - 1]))
-                    print(np.shape(self.weight_layers[j]))
+                    #print(np.shape(dE * dy))
+                    #print(np.shape(intermediate_outputs[j - 1]))
+                    #print(np.shape(self.weight_layers[j]))
                     grad_x = np.matmul(dE * dy, np.transpose(self.weight_layers[j])) # intermediate_outputs[j - 1]
-                    print(np.shape(grad_x))
-                    ideal_output[j - 1] = intermediate_outputs[j - 1] - gamma * (grad_x)
+                    #print(np.shape(grad_x))
+                    ideal_output[j - 1] = intermediate_outputs[j - 1] - gamma*(-j) * (grad_x)
 
-                print(sum(dE))
+                #if j == -1:
+                #print(sum(dE))
+                Error = 0.5 * (dE ** 2)
+                print(sum(Error))
                 print('----------------------------------------')
 
             
@@ -212,7 +215,8 @@ class FeedForwardNN:
             me = np.max(H[-1])
             co = np.zeros(len(H[-1]))
             for i in range(len(H[-1])):
-                print(H[-1][i])
+                #print(H[-1][i])
+                ...
             ##print(co)
             
 
