@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 typedef struct {
     int** m;
@@ -32,7 +33,6 @@ matrix* multiply(matrix* m1, matrix* m2) {
         mat3[i] = (int*)malloc(sizeof(int) * m1->col_size);
     }
 
-    
     for (int i = 0; i < m1->row_size; i++) {
         for (int j = 0; j < m2->col_size; j++) {
             mat3[i][j] = 0;
@@ -51,7 +51,7 @@ matrix* multiply(matrix* m1, matrix* m2) {
 }
 
 int main() {
-    int N = 100;
+    int N = 4000;
     matrix* m1 = (matrix*)malloc(sizeof(matrix));
     matrix* m2 = (matrix*)malloc(sizeof(matrix));
     m1->row_size = N, m1->col_size = N+1;
@@ -75,7 +75,11 @@ int main() {
     m1->m = matrix1;
     m2->m = matrix2;
     
+    clock_t start = clock();
     matrix* m3 = multiply(m1, m2);
+    clock_t end = clock();
+    double ms = (end - start) * 1000 / CLOCKS_PER_SEC;
+    printf("time in milliseconds: %f\n", ms);
 
     /*
     for (int i = 0; i < m3->row_size; i++) {
