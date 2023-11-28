@@ -4,40 +4,42 @@
 #include <pthread.h>
 
 typedef struct {
-	int** m;
-	int row_size, col_size;
+	int* m;
+	int nrow, ncol;
 } matrix;
 
 
 typedef struct {
-	int** m1;
-	int** m2;
-	int** m3;
+	matrix* m1;
+	matrix* m2;
+	matrix* m3;
 	int row;
 	int col;
-	int middle;
 } arg_list;
 
 void free_mat(matrix* m) {
-	for (int i = 0; i < m->row_size; i++) {
-		free(m->m[i]);
-	}
 	free(m->m);
 	free(m);
 }
 
 // calculate ij element
-// m1->col_size must be the same as m2->row_size
+// m1->ncol must be the same as m2->nrow
 void* calc(void* args) {
-	int** mat1 = ((arg_list*)args)->m1;
-	int** mat2 = ((arg_list*)args)->m2;
-	int** mat3 = ((arg_list*)args)->m3;
+	matrix* m1 = ((arg_list*)args)->m1;
+	matrix* m2 = ((arg_list*)args)->m2;
+	matrix* m3 = ((arg_list*)args)->m3;
+	int* mat1 = m1->m;
+	int* mat2 = m2->m;
+	int* mat3 = m3->m;
+	
 	int row = ((arg_list*)args)->row;
 	int col = ((arg_list*)args)->col;
-	int middle = ((arg_list*)args)->middle;
-	mat3[row][col] = 0;
+
+	int middle = m2->nrow;
+	
+	mat3[row * m3->ncol + col] = 0;
 	for (int i = 0; i < middle; i++) {
-		mat3[row][col] += mat1[row][i] + mat2[i][col];
+		mat3[row * m3->ncol + col] += mat1[row * m1->ncol + i] + mat2[i * m2->ncol + col];
 	}
 }
 
@@ -46,40 +48,37 @@ void* calc(void* args) {
 // the first matrix.
 matrix* multiply(matrix* m1, matrix* m2) {
 
-	if (m1->col_size != m2->row_size) {
+	if (m1->ncol != m2->nrow) {
 		fprintf(stdout, "Dimensions do not match");
 		return (matrix*)NULL;
 	}
-	int f_row_size = m1->row_size;
-	int f_col_size = m2->col_size;
-	int middle = m1->col_size;
-	// int num_of_threads = m1->col_size;
-	// pthread_t threads = (pthread_t*)
+	int f_nrow = m1->nrow;
+	int f_ncol = m2->ncol;
+	int middle = m1->ncol;
 
-	int** mat1 = m1->m;
-	int** mat2 = m2->m;
-	int** mat3 = (int**)malloc(sizeof(int*) * f_row_size);
+	int* mat1 = m1->m;
+	int* mat2 = m2->m;
+	int* mat3 = (int*)malloc(sizeof(int) * f_nrow * f_ncol);
+	matrix* m3 = (matrix*)malloc(sizeof(matrix));
+	m3->m = mat3;
+	m3->nrow = f_nrow;
+	m3->ncol = f_ncol;
 
-	for (int i = 0; i < f_row_size; i++) {
-		mat3[i] = (int*)malloc(sizeof(int) * f_col_size);
-	}
-
-	pthread_t* threads = (pthread_t*)malloc(sizeof(pthread_t) * m1->row_size * m2->col_size);
-	arg_list* list_of_args = (arg_list*)malloc(sizeof(arg_list) * m1->row_size * m2->col_size);
-	for (int i = 0; i < f_row_size; i++) {
-		for (int j = 0; j < f_col_size; j++) {
-			list_of_args[i*f_row_size + j].m1 = mat1;
-			list_of_args[i*f_row_size + j].m2 = mat2;
-			list_of_args[i*f_row_size + j].m3 = mat3;
-			list_of_args[i*f_row_size + j].row = i;
-			list_of_args[i*f_row_size + j].col = j;
-			list_of_args[i*f_row_size + j].middle = middle;
+	pthread_t* threads = (pthread_t*)malloc(sizeof(pthread_t) * f_nrow * f_ncol);
+	arg_list* list_of_args = (arg_list*)malloc(sizeof(arg_list) * f_nrow * f_ncol);
+	for (int i = 0; i < f_nrow; i++) {
+		for (int j = 0; j < f_ncol; j++) {
+			list_of_args[i*f_ncol + j].m1 = m1;
+			list_of_args[i*f_ncol + j].m2 = m2;
+			list_of_args[i*f_ncol + j].m3 = m3;
+			list_of_args[i*f_ncol + j].row = i;
+			list_of_args[i*f_ncol + j].col = j;
 			
-			pthread_create(&threads[i*f_row_size + j], NULL, &calc, &list_of_args[i*f_row_size + j]);
+			pthread_create(&threads[i*f_ncol + j], NULL, &calc, &list_of_args[i*f_ncol + j]);
 		}
 	}
 
-	for (int idx = 0; idx < f_row_size * f_col_size; idx++) {
+	for (int idx = 0; idx < f_nrow * f_ncol; idx++) {
 		int val;
 		pthread_join(threads[idx], (void**)val);
 		if (val != 0) fprintf(stdout, "something went wrong when joining\n");
@@ -88,44 +87,38 @@ matrix* multiply(matrix* m1, matrix* m2) {
 	free(threads);
 	free(list_of_args);
 
-	matrix* m3 = (matrix*)malloc(sizeof(matrix));
-	m3->m = mat3;
-	m3->row_size = m1->row_size;
-	m3->col_size = m2->col_size;
-
 	return m3;
 }
 
 int get_value_of_matrix_at_ij(matrix* m, int i, int j) {
-	return m->m[i][j];
+	return m->m[i * m->ncol + j];
 }
 
 int main() {
+	int N[5] = {5, 5, 5, 5, 5};
 	
-	int N[5] = {100, 100, 100, 100, 100};
+	//int N[5] = {100, 100, 100, 100, 100};
 	FILE *file_pointer = fopen("threaded_matrix_mult_data.txt", "w+");
 	for (int s = 0; s < 5; s++) {
 		// LOOP 10 TIMES TO GET CONSISTENT DATA
 		double ms = 0;
-		for (int t = 0; t < 10; t++) {
+		for (int t = 0; t < 1; t++) {
 			matrix* m1 = (matrix*)malloc(sizeof(matrix));
 			matrix* m2 = (matrix*)malloc(sizeof(matrix));
-			m1->row_size = N[s], m1->col_size = N[s]+1;
-			m2->row_size = N[s]+1, m2->col_size = N[s];
+			m1->nrow = N[s], m1->ncol = N[s]+1;
+			m2->nrow = N[s]+1, m2->ncol = N[s];
 
-			int** matrix1 = (int**)malloc(sizeof(int*) * m1->row_size);
-			for (int i = 0; i < m1->row_size; i++) {
-				matrix1[i] = (int*)malloc(sizeof(int) * m1->col_size);
-				for (int j = 0; j < m1->col_size; j++) {
-					matrix1[i][j] = 1;
+			int* matrix1 = (int*)malloc(sizeof(int) * m1->nrow * m1->ncol);
+			for (int i = 0; i < m1->nrow; i++) {
+				for (int j = 0; j < m1->ncol; j++) {
+					matrix1[i * m1->ncol + j] = 1;
 				}
 			}
 
-			int** matrix2 = (int**)malloc(sizeof(int*) * m2->row_size);
-			for (int i = 0; i < m2->row_size; i++) {
-				matrix2[i] = (int*)malloc(sizeof(int) * m2->col_size);
-				for (int j = 0; j < m2->col_size; j++) {
-					matrix2[i][j] = 1;
+			int* matrix2 = (int*)malloc(sizeof(int) * m2->nrow * m2->ncol);
+			for (int i = 0; i < m2->nrow; i++) {
+				for (int j = 0; j < m2->ncol; j++) {
+					matrix2[i * m2->ncol + j] = 1;
 				}
 			}
 			m1->m = matrix1;
@@ -152,6 +145,58 @@ int main() {
 		// fprintf(file_pointer, "Average time to multiply (%d x %d) and (%d x %d) in milliseconds: %f\n", N[s], N[s]+1, N[s]+1, N[s], ms/10); 
 	}
 	fclose(file_pointer);
+
+	matrix* m1 = (matrix*)malloc(sizeof(matrix));
+	matrix* m2 = (matrix*)malloc(sizeof(matrix));
+	m1->nrow = 3, m1->ncol = 4;
+	m2->nrow = 4, m2->ncol = 5;
+
+	int* matrix1 = (int*)malloc(sizeof(int) * m1->nrow * m1->ncol);
+	int idx = 1;
+	for (int i = 0; i < m1->nrow; i++) {
+		for (int j = 0; j < m1->ncol; j++) {
+			matrix1[i * m1->ncol + j] = idx++;
+		}
+	}
+
+	int* matrix2 = (int*)malloc(sizeof(int) * m2->nrow * m2->ncol);
+	idx = 1;
+	for (int i = 0; i < m2->nrow; i++) {
+		for (int j = 0; j < m2->ncol; j++) {
+			matrix2[i * m2->ncol + j] = idx++;
+		}
+	}
+	m1->m = matrix1;
+	m2->m = matrix2;
+	matrix* m3 = multiply(m1, m2);
+
+	for (int i = 0; i < m1->nrow; i++) {
+		for (int j = 0; j < m1->ncol; j++) {
+			fprintf(stdout, "%i ", m1->m[i * m1->ncol + j]);
+		}
+		fprintf(stdout, "\n");
+	}
+	fprintf(stdout, "\n-----------------------------------------\n");
+
+	for (int i = 0; i < m2->nrow; i++) {
+		for (int j = 0; j < m2->ncol; j++) {
+			fprintf(stdout, "%i ", m2->m[i * m2->ncol + j]);
+		}
+		fprintf(stdout, "\n");
+	}
+	fprintf(stdout, "\n-----------------------------------------\n");
+
+	for (int i = 0; i < m3->nrow; i++) {
+		for (int j = 0; j < m3->ncol; j++) {
+			fprintf(stdout, "%i ", m3->m[i * m3->ncol + j]);
+		}
+		fprintf(stdout, "\n");
+	}
+		
+
+	free_mat(m1);
+	free_mat(m2);
+	free_mat(m3);
 	
 	return 0;
 }
