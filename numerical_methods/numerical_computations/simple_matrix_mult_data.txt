@@ -1,5 +1,5 @@
-Average time to multiply (100 x 101) and (101 x 100) in milliseconds: 39.000000
-Average time to multiply (200 x 201) and (201 x 200) in milliseconds: 170.000000
-Average time to multiply (500 x 501) and (501 x 500) in milliseconds: 2620.000000
-Average time to multiply (500 x 501) and (501 x 500) in milliseconds: 2634.000000
-Average time to multiply (500 x 501) and (501 x 500) in milliseconds: 2621.000000
+Average time to multiply (100 x 101) and (101 x 100) in milliseconds: 62.000000
+Average time to multiply (200 x 201) and (201 x 200) in milliseconds: 220.000000
+Average time to multiply (500 x 501) and (501 x 500) in milliseconds: 4298.000000
+Average time to multiply (500 x 501) and (501 x 500) in milliseconds: 4298.000000
+Average time to multiply (500 x 501) and (501 x 500) in milliseconds: 4256.000000
