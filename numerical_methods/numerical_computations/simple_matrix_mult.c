@@ -46,10 +46,10 @@ matrix* multiply(matrix* m1, matrix* m2) {
 }
 
 int main() {
-	// int N[5] = {100, 200, 500, 1000, 1500};	
-	int N[5] = {100, 200, 500, 500, 500};
+	int N[5] = {100, 200, 500, 1000, 1500};	
+	//int N[5] = {100, 200, 500, 500, 500};
 	
-	
+	/*
 	FILE *file_pointer = fopen("simple_matrix_mult_data.txt", "w+");
 	for (int s = 0; s < 5; s++) {
 		// LOOP 10 TIMES TO GET CONSISTENT DATA
@@ -79,17 +79,7 @@ int main() {
 			clock_t start = clock();
 			matrix* m3 = multiply(m1, m2);
 			clock_t end = clock();
-			ms += (end - start) * 1000 / CLOCKS_PER_SEC;
-			printf("time in milliseconds: %f\n", ms);
-
-			/*
-			for (int i = 0; i < m3->nrow; i++) {
-				for (int j = 0; j < m3->ncol; j++) {
-					fprintf(stdout, "%i ", m3->m[i][j]);
-				}
-				fprintf(stdout, "\n");
-			}
-			*/
+			ms += (end - start) * 1000 / CLOCKS_PER_SEC;			
 
 			free_mat(m1);
 			free_mat(m2);
@@ -98,11 +88,12 @@ int main() {
 		fprintf(file_pointer, "Average time to multiply (%d x %d) and (%d x %d) in milliseconds: %f\n", N[s], N[s]+1, N[s]+1, N[s], ms); 
 	}
 	fclose(file_pointer);
-
+	*/
+	
 	matrix* m1 = (matrix*)malloc(sizeof(matrix));
 	matrix* m2 = (matrix*)malloc(sizeof(matrix));
 	m1->nrow = 3, m1->ncol = 4;
-	m2->nrow = 4, m2->ncol = 5;
+	m2->nrow = 4, m2->ncol = 10;
 
 	int* matrix1 = (int*)malloc(sizeof(int) * m1->nrow * m1->ncol);
 	int idx = 1;
@@ -150,6 +141,7 @@ int main() {
 	free_mat(m1);
 	free_mat(m2);
 	free_mat(m3);
+	
 	
 	return 0;
 }
