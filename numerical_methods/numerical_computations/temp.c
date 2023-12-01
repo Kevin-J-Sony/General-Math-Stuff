@@ -1,6 +1,10 @@
 #include <stdio.h>
 
+#ifdef __APPLE__ || __MACH__
+#include <OpenCL/cl.h>
+#else
 #include <CL/cl.h>
+#endif
 
 int main() {
 	cl_int CL_err = CL_SUCCESS;

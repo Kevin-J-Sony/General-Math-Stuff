@@ -67,6 +67,7 @@ void compute_row(void* args) {
 			mat3[row * ncol + j] += mat1[(row * m1->ncol) + k] * mat2[(k * m2->ncol) + j];
 		}
 	}
+	pthread_detach(pthread_self());
 	pthread_exit(NULL);
 }
 
