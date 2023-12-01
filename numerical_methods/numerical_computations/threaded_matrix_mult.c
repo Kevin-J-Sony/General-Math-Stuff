@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
 #include <pthread.h>
 
 typedef struct {
@@ -39,8 +40,34 @@ void* calc(void* args) {
 	
 	mat3[row * m3->ncol + col] = 0;
 	for (int i = 0; i < middle; i++) {
-		mat3[row * m3->ncol + col] += mat1[row * m1->ncol + i] + mat2[i * m2->ncol + col];
+		mat3[row * m3->ncol + col] += mat1[row * m1->ncol + i] * mat2[i * m2->ncol + col];
 	}
+	pthread_exit(NULL);
+
+}
+
+void compute_row(void* args) {
+	matrix* m1 = ((arg_list*)args)->m1;
+	matrix* m2 = ((arg_list*)args)->m2;
+	matrix* m3 = ((arg_list*)args)->m3;
+
+	int* mat1 = m1->m;
+	int* mat2 = m2->m;
+	int* mat3 = m3->m;
+	
+	int row = ((arg_list*)args)->row;
+	int ncol = m3->ncol;
+	int middle = m2->nrow;
+
+	// compute mat3[row]([...])
+	for (int j = 0; j < ncol; j++) {
+		// mat3[row][j]
+		mat3[row * ncol + j] = 0;
+		for (int k = 0; k < middle; k++) {
+			mat3[row * ncol + j] += mat1[(row * m1->ncol) + k] * mat2[(k * m2->ncol) + j];
+		}
+	}
+	pthread_exit(NULL);
 }
 
 // take two matrices m1, m2, and return the result of these two multiplied
@@ -64,10 +91,13 @@ matrix* multiply(matrix* m1, matrix* m2) {
 	m3->nrow = f_nrow;
 	m3->ncol = f_ncol;
 
+	/*
 	pthread_t* threads = (pthread_t*)malloc(sizeof(pthread_t) * f_nrow * f_ncol);
 	arg_list* list_of_args = (arg_list*)malloc(sizeof(arg_list) * f_nrow * f_ncol);
+	
 	for (int i = 0; i < f_nrow; i++) {
 		for (int j = 0; j < f_ncol; j++) {
+			fprintf(stdout, "%d and %d\n", i, j);
 			list_of_args[i*f_ncol + j].m1 = m1;
 			list_of_args[i*f_ncol + j].m2 = m2;
 			list_of_args[i*f_ncol + j].m3 = m3;
@@ -77,12 +107,28 @@ matrix* multiply(matrix* m1, matrix* m2) {
 			pthread_create(&threads[i*f_ncol + j], NULL, &calc, &list_of_args[i*f_ncol + j]);
 		}
 	}
+	*/
 
+	pthread_t* threads = (pthread_t*)malloc(sizeof(pthread_t) * f_nrow);
+	arg_list* list_of_args = (arg_list*)malloc(sizeof(arg_list) * f_nrow);
+	
+	for (int i = 0; i < f_nrow; i++) {			
+		list_of_args[i].m1 = m1;
+		list_of_args[i].m2 = m2;
+		list_of_args[i].m3 = m3;
+		list_of_args[i].row = i;
+		list_of_args[i].col = -10000;
+		pthread_create(&threads[i], NULL, &compute_row, &list_of_args[i]);
+	}
+
+	
+	/*
 	for (int idx = 0; idx < f_nrow * f_ncol; idx++) {
 		int val;
+		fprintf(stdout, "idx: %d\n", idx);
 		pthread_join(threads[idx], (void**)val);
 		if (val != 0) fprintf(stdout, "something went wrong when joining\n");
-	}
+	}*/
 
 	free(threads);
 	free(list_of_args);
@@ -95,7 +141,7 @@ int get_value_of_matrix_at_ij(matrix* m, int i, int j) {
 }
 
 int main() {
-	int N[5] = {5, 5, 5, 5, 5};
+	int N[5] = {100, 200, 500, 1000, 1500};
 	
 	//int N[5] = {100, 100, 100, 100, 100};
 	FILE *file_pointer = fopen("threaded_matrix_mult_data.txt", "w+");
@@ -134,7 +180,7 @@ int main() {
 			int (*function)(matrix*, int, int);
 			function = &get_value_of_matrix_at_ij;
 			int sum = function(m3, 0, 0);
-			fprintf(stdout, "value of m3 at (%i, %i): %i\n", 0, 0, sum);
+
 
 			
 
@@ -142,14 +188,15 @@ int main() {
 			free_mat(m2);
 			free_mat(m3);
 		}
-		// fprintf(file_pointer, "Average time to multiply (%d x %d) and (%d x %d) in milliseconds: %f\n", N[s], N[s]+1, N[s]+1, N[s], ms/10); 
+		fprintf(file_pointer, "Average time to multiply (%d x %d) and (%d x %d) in milliseconds: %f\n", N[s], N[s]+1, N[s]+1, N[s], ms/10); 
 	}
 	fclose(file_pointer);
-
+	
+	
 	matrix* m1 = (matrix*)malloc(sizeof(matrix));
 	matrix* m2 = (matrix*)malloc(sizeof(matrix));
 	m1->nrow = 3, m1->ncol = 4;
-	m2->nrow = 4, m2->ncol = 5;
+	m2->nrow = 4, m2->ncol = 10;
 
 	int* matrix1 = (int*)malloc(sizeof(int) * m1->nrow * m1->ncol);
 	int idx = 1;
