@@ -1,4 +1,4 @@
 .vscode
 threads
+.DS_Store
 
-numerical_methods/numerical_computations/opencl
