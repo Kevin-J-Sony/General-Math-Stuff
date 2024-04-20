@@ -74,7 +74,8 @@ class Simplicial_Complex:
 		# After confirming it is indeed a simplicial complex, compute the boundary operators
 		self.compute_boundary_operators()
   
-		# After computing the boundary operators, reduce the boundary operator
+		# After computing the boundary operators, compute the homology group
+		self.compute_homology()
 	
 	'''
  	Auxillary function that determines if simplex_two, a subset of simplex_one, has the same orientation
@@ -84,7 +85,7 @@ class Simplicial_Complex:
 	Since the inputs given are guaranteed to be a subset of one another created from obsolving 
   	'''
 	def oriented(self, simplex_one, simplex_two):
-		# Found on stackoverflow, no idea how it works, but it does the job
+		# Found on stackoverflow, unfortunately can't find it again. No idea how it works, but it does the job
 		def generate_list(l1, l2):
 			for element in l1:
 				if element in l2:
@@ -123,9 +124,15 @@ class Simplicial_Complex:
 							(self.boundary_operator[i])[low_idx][upper_idx] = 1
 						else:
 							(self.boundary_operator[i])[low_idx][upper_idx] = -1
+       
+		# the final boundary operator d_n+1: 0->C_n is simply every basis element of C_n 
+		self.boundary_operator.append(np.ones((len(self.simplices[self.dim]), 1)))
+		print("final")
+		print("---------------------------------------")
+		print(self.boundary_operator[-1])
+		print("---------------------------------------")
+		
 					
-			print(self.boundary_operator[i])
-			# self.boundary_operator[i]
 	
  
 	'''
@@ -137,18 +144,83 @@ class Simplicial_Complex:
 		m = len(A[0])
 		Dtop = np.hstack( (np.eye(n), A.copy()) )
 		Dbot = np.hstack( (np.zeros((m, n)), np.eye(m)) )
-		print("\n\n")
-		print(Dtop)
-		print(Dbot)
 		D = np.vstack( (Dtop, Dbot) )
+		print(D)
+  
+		rank = 0
+		
+		# Apply a modified form of the RREF algorithm, which starts at index n (or where A resides)
+		# Modified RREF algorithm given by https://math.stackexchange.com/questions/3073083/how-to-reduce-matrix-into-row-echelon-form-in-numpy
+		for col in range(n, n + min(m, n)):
+				
+			# For the current row, search for the elements in A are nonzero
+			i = col - n
+			for j in range(i, n):
+				if D[j][col] != 0:
+					rank = rank + 1
+					i = j
+					break
+			else:
+				# All the elements in this row are zero, so continue
+				continue
+			
+			# Swap the row at i with the row associated with the column
+			irow = D[i].copy()
+			D[i] = D[col - n]
+			D[col - n] = irow
+   
+			# Reduce the row
+			D[col - n] = D[col - n]/D[col - n][col]
+   
+			# Now that rows are swapped, put zeros on top and bottom
+			for row in range(0, n):
+				if row != col - n and D[row][col] != 0:
+					D[row] = D[row] - D[col - n] * D[row][col]
+     
+		# At this point, all matrices should be reduced in A, but if columns in A > rows in A, it
+		# might be the case that A still isn't in Smith Normal Form
+		# The solution in this case is simple and it's to get set to zeros the remaining columns
+		if m > n:
+			print(D[:, n + n:])
+			D[:, n + n:] = D[:, n + n:] * 0
 		print("\n\n")
 		print(D)
-		...
-	
+  
+		# get P and Q
+		P = D[0:n,0:n]
+		Q = D[n:, n:]
+  
+		print(P)
+		print(Q)
+
+		return rank, P, Q
+  
 	'''
- 	Reduce the boundary operators
+ 	For every boundary operator (except the 0th), compute the Smith Normal Form and get the corresponding P, Q, and D
+  
+	The 0th homology group is simply the basis of the C_0
   	'''
 	def compute_homology(self):
+		P = []
+		Q = []
+		rank = []
+		for i in range(1, self.dim + 2):
+			print("\n\n\n")
+			print("Smith normal form for the following matrix")
+			print("---------------------------------------")
+			print(self.boundary_operator[i])
+			print("---------------------------------------")
+			ranki, Pi, Qi = Simplicial_Complex.smith_normal_form(self.boundary_operator[i])
+			P.append(Pi)
+			Q.append(Qi)
+			rank.append(ranki)
+
+		# Get the inverse of Pi
+		invP = []
+		for Pi in P:
+			invP.append(np.linalg.inv(Pi))
+
+		# Get Zi and Bi 
 		...
 
 if __name__ == '__main__':
@@ -163,7 +235,7 @@ if __name__ == '__main__':
  
 	print("\n\n\nLine\n")
 	K_line_list = [['A'], ['B'], ['C'], ['D'], ['E'], ['A', 'B'], ['B', 'C'], ['C', 'D'], ['D', 'E']]
-	K_line = Simplicial_Complex(K_line_list)
+	#K_line = Simplicial_Complex(K_line_list)
 
 	print("\n\n\nTorus\n")
 	
@@ -196,9 +268,11 @@ if __name__ == '__main__':
                   	]
 	torus = torus_vertices + torus_edges + torus_faces
 	torus = list(map(list, set(map(tuple, torus))))
-	print(torus)
-	torus_complex = Simplicial_Complex(torus)
+	#print(torus)
+	#torus_complex = Simplicial_Complex(torus)
 
-	Simplicial_Complex.smith_normal_form(np.array([[1, 2, 3], [4, 5, 6]]))
+	#Simplicial_Complex.smith_normal_form(np.array([[1, 2, 3], [4, 5, 6]]))
+	Simplicial_Complex.smith_normal_form(np.array([[1, 2, 3, 4], [5, 6, 7, 8]]))
+
 	#K_line_list = [['A'], ['B'], ['C'], ['D'], ['E'], ['A', 'B'], ['B', 'C'], ['C', 'D'], ['D', 'E']]
 	#K_line = Simplicial_Complex(K_line_list)
