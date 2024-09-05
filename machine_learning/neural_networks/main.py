@@ -1,5 +1,5 @@
 from read_numbers import *
-from fnn import FeedForwardNN
+from BasicNeuralNetwork import BasicNeuralNetwork
 
 
 def main():
@@ -13,7 +13,7 @@ def main():
         t = np.zeros(10)
         t[label] = 1
         train_data_outputs.append(t)
-    mnist_fnn_model = FeedForwardNN(784, 300, 100, 10)
+    mnist_fnn_model = BasicNeuralNetwork(784, 100, 10)
 
     """
     number = 100

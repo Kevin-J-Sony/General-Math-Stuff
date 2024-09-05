@@ -1,3 +1,7 @@
+'''
+The code developed is inspired from "Computational Algebriac Topology Lecture Notes" written by Vidit Nanda
+The notes are given here https://people.maths.ox.ac.uk/nanda/cat/TDANotes.pdf
+'''
 import numpy as np
 
 class Simplicial_Complex:
@@ -101,8 +105,8 @@ class Simplicial_Complex:
 	def compute_boundary_operators(self):
 		self.boundary_operator = []
   
-		# delta_0 is just 0
-		self.boundary_operator.append(0)
+		# delta_0 is just mapping all points to nothing
+		self.boundary_operator.append(np.ones((1, len(self.simplices[0]))))
 
 		# delta_i is just C_i to C_i-1
 		for i in range(1, self.dim + 1):
@@ -126,14 +130,7 @@ class Simplicial_Complex:
 							(self.boundary_operator[i])[low_idx][upper_idx] = -1
        
 		# the final boundary operator d_n+1: 0->C_n is simply every basis element of C_n 
-		self.boundary_operator.append(np.ones((len(self.simplices[self.dim]), 1)))
-		print("final")
-		print("---------------------------------------")
-		print(self.boundary_operator[-1])
-		print("---------------------------------------")
-		
-					
-	
+		self.boundary_operator.append(np.ones((len(self.simplices[self.dim]), 1)))		
  
 	'''
 	Find Smith Normal Form of A.
@@ -145,7 +142,6 @@ class Simplicial_Complex:
 		Dtop = np.hstack( (np.eye(n), A.copy()) )
 		Dbot = np.hstack( (np.zeros((m, n)), np.eye(m)) )
 		D = np.vstack( (Dtop, Dbot) )
-		print(D)
   
 		rank = 0
 		
@@ -181,46 +177,90 @@ class Simplicial_Complex:
 		# might be the case that A still isn't in Smith Normal Form
 		# The solution in this case is simple and it's to get set to zeros the remaining columns
 		if m > n:
-			print(D[:, n + n:])
 			D[:, n + n:] = D[:, n + n:] * 0
-		print("\n\n")
-		print(D)
   
 		# get P and Q
 		P = D[0:n,0:n]
 		Q = D[n:, n:]
   
-		print(P)
-		print(Q)
-
 		return rank, P, Q
-  
+
+	'''
+ 	Find the RREF of the matrix
+  	'''
+	@staticmethod
+	def rref(A):
+		mat = A.copy()
+		n = len(A)
+		m = len(A[0])
+		for col in range(0, m):
+			# For the current row, search for the elements in A are nonzero
+			i = col
+			for j in range(i, n):
+				if mat[j][col] != 0:
+					i = j
+					break
+			else:
+				# All the elements in this row are zero, so continue
+				continue
+			
+   			# Swap the row at i with the row associated with the column
+			irow = mat[i].copy()
+			mat[i] = mat[col]
+			mat[col] = irow
+   
+			# Reduce the row
+			mat[col - n] = mat[col - n]/mat[col - n][col]
+   
+			# Now that rows are swapped, put zeros on top and bottom
+			for row in range(0, n):
+				if row != col - n and mat[row][col] != 0:
+					mat[row] = mat[row] - mat[col] * mat[row][col]
+		return mat
+
 	'''
  	For every boundary operator (except the 0th), compute the Smith Normal Form and get the corresponding P, Q, and D
   
 	The 0th homology group is simply the basis of the C_0
   	'''
 	def compute_homology(self):
-		P = []
-		Q = []
-		rank = []
-		for i in range(1, self.dim + 2):
-			print("\n\n\n")
-			print("Smith normal form for the following matrix")
-			print("---------------------------------------")
-			print(self.boundary_operator[i])
-			print("---------------------------------------")
+		# the boundary operator d_0: C_0 -> 0
+		P = {}
+		Q = {}
+		rank = {}
+		for i in range(0, self.dim + 2):
 			ranki, Pi, Qi = Simplicial_Complex.smith_normal_form(self.boundary_operator[i])
-			P.append(Pi)
-			Q.append(Qi)
-			rank.append(ranki)
+   
+			P[i] = Pi
+			Q[i] = Qi
+			rank[i] = ranki
+			#P.append(Pi)
+			#Q.append(Qi)
+			#rank.append(ranki)
 
-		# Get the inverse of Pi
-		invP = []
-		for Pi in P:
-			invP.append(np.linalg.inv(Pi))
+		# Get Z
+		Z = {}
+		for key in P:
+			Z[key - 1] = np.linalg.inv(P[key])[:, key:]
+   
+		# Get B
+		B = {}
+		for key in Q:
+			B[key] = (Q[key])[:, :len(Q[key]) - rank[key]]
 
-		# Get Zi and Bi 
+  
+		# get G
+		G = {}
+		H = {}
+		for key in B:
+			if key in Z:
+				G[key] = np.hstack( (B[key], Z[key]) )
+    			# reduce B[i] and Z[i]
+				H[key] = np.hstack( (Simplicial_Complex.rref(B[key]), Simplicial_Complex.rref(Z[key])) )
+				print("\n\n\n")
+				print(B[key])
+				print(Z[key])
+   			
 		...
 
 if __name__ == '__main__':
@@ -235,7 +275,7 @@ if __name__ == '__main__':
  
 	print("\n\n\nLine\n")
 	K_line_list = [['A'], ['B'], ['C'], ['D'], ['E'], ['A', 'B'], ['B', 'C'], ['C', 'D'], ['D', 'E']]
-	#K_line = Simplicial_Complex(K_line_list)
+	K_line = Simplicial_Complex(K_line_list)
 
 	print("\n\n\nTorus\n")
 	

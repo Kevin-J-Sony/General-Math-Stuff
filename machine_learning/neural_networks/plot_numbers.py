@@ -7,19 +7,24 @@ def plotter(screen, pdata, label, coord, font):
     # the pixels values contains the pixel value for the images in a 28*28=784 element array
     # the values of the pixel range from 0 to 255
     # we want to allocate 20 pixels at the very least to each 
-    UNIT = 20
+    UNIT = 10
     for row in range(28):
+        shade_str = ""
         for col in range(28):
             rect = pygame.Rect(col*UNIT+coord[0],row*UNIT+coord[1],UNIT,UNIT)
-            shade = pdata[row * 28 + col]
+            shade = pdata[row * 28 + col] * 256
+            shade_str += str(shade) + " "
             pygame.draw.rect(screen,(shade,shade,shade),rect)
+        print(shade_str)
+        
+    print("=======================================")
 
     text = font.render(str(label), True, (255,255,255))
     screen.blit(text, (coord[0], coord[1]))
 
 
 if __name__ == '__main__':
-    train_pdata, train_label = read_train_data(100)
+    train_pdata, train_label = read_train_data(10000)
 
     pygame.init()
     SCREEN_WIDTH = 640
@@ -30,7 +35,7 @@ if __name__ == '__main__':
     font = pygame.font.SysFont("arial", 20)
 
     running = True
-    idx = 0
+    idx = 15
     current_train_data = train_pdata[idx]
     current_label = train_label[idx]
 

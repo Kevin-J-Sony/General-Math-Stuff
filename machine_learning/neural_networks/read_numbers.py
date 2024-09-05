@@ -6,6 +6,8 @@ def read_train_data(number_of_data):
     file = open("data/train-images.idx3-ubyte",'rb')
     a = file.read(4)
     b = file.read(4)
+    length = file.read(4)
+    width = file.read(4)
 
     ''' Purely for sanity check
     print

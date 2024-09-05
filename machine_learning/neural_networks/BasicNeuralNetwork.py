@@ -1,7 +1,7 @@
 import numpy as np
 
 # This class is a rudementary Neural Netowrk.
-class FeedForwardNN:
+class BasicNeuralNetwork:
     
     # In initialization, the network is established.
     # For n layers, n-1 weight matrices are used and n-1 bias "vector" are made
@@ -102,7 +102,7 @@ class FeedForwardNN:
         return matrix * (matrix > 0)
 
     def dtransform(matrix):
-        # temp = FeedForwardNN.transform(matrix)
+        # temp = BasicNeuralNetwork.transform(matrix)
         # return np.exp(-matrix) * (temp*temp)
         return 1 * (matrix > 0)
 
@@ -114,32 +114,23 @@ class FeedForwardNN:
         Z = [input]
         for idx in range(len(self.weight_layers)):
             A = np.matmul(Z[idx], self.weight_layers[idx]) + self.bias_layers[idx]
-            Z.append(FeedForwardNN.transform(A))
+            Z.append(BasicNeuralNetwork.transform(A))
         return Z
 
+    '''
+    This is the met of the Neural Network. The training algorithm is a gradient descent. The basic idea is
+    using the chain rule on smooth manifolds to find the gradient of the error function at a given "input". However,
+    crucially, our input in this case is a simple matrix which 
+    '''
     def train(self, train_data_inputs, train_data_outputs):
         if len(train_data_inputs) != len(train_data_outputs):
             print('# of train inputs: ', len(train_data_inputs))
             print('# of train outputs: ', len(train_data_outputs))
             raise Exception("The number of inputs does not match the number of outputs")
 
-        n_loops = 1
+        n_loops = 50
 
         for loop in range(n_loops):
-            '''
-            for idx in range(len(train_data_inputs)):
-                current_input = train_data_inputs[idx]
-                current_correct_output = train_data_outputs[idx]
-                intermediate_outputs = [current_input]
-                for j in range(len(self.weight_layers)):
-                    A = np.matmul(intermediate_outputs[j], self.weight_layers[j]) + self.bias_layers[j]
-                    intermediate_outputs.append(FeedForwardNN.transform(A))
-                # Now this is the time to back propagate
-                ideal_output = current_correct_output
-                for j in range(len(self.weight_layers) - 1 - 1, 1 - 1, -1):
-                    # dz = 1 if 
-                    ...
-            '''
             n_of_layers = len(self.n_layers)
 
             input = train_data_inputs
@@ -147,7 +138,7 @@ class FeedForwardNN:
             intermediate_outputs = [input]
             for j in range(n_of_layers - 1):
                 A = np.matmul(intermediate_outputs[j], self.weight_layers[j]) + self.bias_layers[j]
-                intermediate_outputs.append(FeedForwardNN.transform(A))
+                intermediate_outputs.append(BasicNeuralNetwork.transform(A))
             # backpropagate with intermediate outputs
             ideal_output = [0 for i in range(n_of_layers)]
             ideal_output[-1] = correct_output
@@ -159,12 +150,13 @@ class FeedForwardNN:
             # print(len(intermediate_outputs))
             for j in range(-1, -n_of_layers, -1):
                 #print(ideal_output[j])
+                # breakpoint()
                 dE = (intermediate_outputs[j] - ideal_output[j]) / len(train_data_inputs)
                 if type(intermediate_outputs[j]) == type([1, 2]):
                     #print(intermediate_outputs[j])
                     print(type(input))
-                dy = FeedForwardNN.dtransform(intermediate_outputs[j])
-
+                dy = BasicNeuralNetwork.dtransform(intermediate_outputs[j])
+                
                 grad_w = np.matmul(np.transpose(dE * dy), intermediate_outputs[j - 1]).T
                 #print(np.shape(dE))
                 #print(np.shape(dy))
@@ -180,10 +172,12 @@ class FeedForwardNN:
 
                 #momentum_w = 0.08*momentum_w + grad_w
                 #momentum_b = 0.08*momentum_b + sum(grad_b)
+                #breakpoint()
                 momentum_w = grad_w
                 momentum_b = sum(grad_b)
                 
                 self.weight_layers[j] = self.weight_layers[j] - gamma * (momentum_w)
+                
                 self.bias_layers[j] = self.bias_layers[j] - gamma * (momentum_b)
 
                 if j != -n_of_layers:
@@ -222,10 +216,10 @@ class FeedForwardNN:
 
 
 if __name__ == '__main__':
-    fnn = FeedForwardNN(10, 10, 5)
+    fnn = BasicNeuralNetwork(10, 10, 5)
     fnn.save("temp.ann")
 
-    fnn2 = FeedForwardNN()
+    fnn2 = BasicNeuralNetwork()
     fnn2.load("temp.ann")
     
     # check they are the same
