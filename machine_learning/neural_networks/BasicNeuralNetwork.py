@@ -18,8 +18,8 @@ class BasicNeuralNetwork:
         self.bias_layers = []
         if len(args) > 0:
             for idx in range(len(args) - 1):
-                self.weight_layers.append(np.random.rand(args[idx], args[idx + 1]) - 0.5)
-                self.bias_layers.append(np.random.rand(1, args[idx + 1]) - 0.5)
+                self.weight_layers.append(np.ones((args[idx], args[idx + 1])) - 0.5)
+                self.bias_layers.append(np.ones((1, args[idx + 1])) - 0.5)
         self.n_layers = args
 
     # NOT TO BE USED AT ALL LMAO. I DID IT JUST TO CONFIRM MY CLASS WORKS
@@ -128,7 +128,7 @@ class BasicNeuralNetwork:
             print('# of train outputs: ', len(train_data_outputs))
             raise Exception("The number of inputs does not match the number of outputs")
 
-        n_loops = 50
+        n_loops = 1
 
         for loop in range(n_loops):
             n_of_layers = len(self.n_layers)

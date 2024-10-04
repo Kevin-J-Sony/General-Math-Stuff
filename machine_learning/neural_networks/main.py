@@ -3,7 +3,7 @@ from BasicNeuralNetwork import BasicNeuralNetwork
 
 
 def main():
-    train_data_inputs, train_data_labels = read_train_data(200)
+    train_data_inputs, train_data_labels = read_train_data(1)
     # we can't quite use the label as an output as the particular form of this model
     # makes it much difficult to output a label as an answer. Instead, format the data
     # as an array which is turned on at certain indices
@@ -32,7 +32,7 @@ def main():
     mnist_fnn_model.save("before_training.fnn")
     
     # train the model
-    idx = 17
+    idx = 0
     model_output = mnist_fnn_model.compute(train_data_inputs[idx])
     prev_output = model_output[-1]
     '''
